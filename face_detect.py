@@ -1,29 +1,63 @@
-#pylint:disable=no-member
+import cv2
+import mediapipe as mp
 
-import cv2 as cv
+# Initialisation de Mediapipe pour la détection du visage et l'extraction des points du visage
+mp_face_detection = mp.solutions.face_detection
+mp_face_mesh = mp.solutions.face_mesh
+mp_drawing = mp.solutions.drawing_utils
 
-img = cv.imread('./data/Tester c/cristiano 7.jpg')
-#cv.imshow('cristiano ', img)
+# Chargement de l'image
+img = cv2.imread('data/Tester c/messi 4.jpg')
 
-gray = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
+# Conversion de l'image en RGB, car Mediapipe nécessite ce format
+rgb_img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
-#cv.imshow('Gray cristiano', gray)
+# Détection du visage avec FaceDetection
+with mp_face_detection.FaceDetection(min_detection_confidence=0.2) as face_detection:
+    results = face_detection.process(rgb_img)
 
-#le fichier Haarcascades contient un modèle de détection entraîné, 
-# qui est l'élément clé pour effectuer des détections précises
-# dans l'applications de vision par ordinateur.
+    if results.detections:
+        # Si un visage est détecté, dessiner un rectangle autour du visage
+        for detection in results.detections:
+            bboxC = detection.location_data.relative_bounding_box
+            ih, iw, _ = img.shape
+            x, y, w, h = int(bboxC.xmin * iw), int(bboxC.ymin * ih), int(bboxC.width * iw), int(bboxC.height * ih)
+            # Dessiner le rectangle autour du visage
+            cv2.rectangle(img, (x, y), (x + w, y + h), (0, 255, 0), 2)
 
-haar_cascade = cv.CascadeClassifier('./data/Haarcascades/haar_face.xml')
+# Extraction des points du visage avec FaceMesh
+with mp_face_mesh.FaceMesh(max_num_faces=1, min_detection_confidence=0.2, min_tracking_confidence=0.2) as face_mesh:
+    results = face_mesh.process(rgb_img)
 
-faces_rect = haar_cascade.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=3)
+    if results.multi_face_landmarks:
+        for face_landmarks in results.multi_face_landmarks:
+            # Récupération des points pour les yeux, le nez et la bouche
+            left_eye = face_landmarks.landmark[33]  # Point pour l'œil gauche
+            nose = face_landmarks.landmark[1]  # Point pour le nez
+            mouth = face_landmarks.landmark[13]  # Point pour la bouche
 
-print(f'Number of faces found = {len(faces_rect)}')
+            ih, iw, _ = img.shape
 
-for (x,y,w,h) in faces_rect:
-    cv.rectangle(img, (x,y), (x+w,y+h), (0,255,0), thickness=2)
+            # Calcul des coordonnées pour l'œil gauche
+            left_eye_points = [33, 133, 173, 153, 144, 163, 157, 158]  # Liste des indices pour l'œil gauche
+            left_eye_x_min = min([int(face_landmarks.landmark[p].x * iw) for p in left_eye_points])
+            left_eye_x_max = max([int(face_landmarks.landmark[p].x * iw) for p in left_eye_points])
+            left_eye_y_min = min([int(face_landmarks.landmark[p].y * ih) for p in left_eye_points])
+            left_eye_y_max = max([int(face_landmarks.landmark[p].y * ih) for p in left_eye_points])
 
-cv.imshow('Detected Faces', img)
+            # Dessiner un rectangle autour de l'œil gauche
+            cv2.rectangle(img, (left_eye_x_min - 10, left_eye_y_min - 10),
+                          (left_eye_x_max + 10, left_eye_y_max + 10), (255, 0, 0), 2)
 
+            # Dessiner un rectangle autour du nez
+            nose_x, nose_y = int(nose.x * iw), int(nose.y * ih)
+            cv2.rectangle(img, (nose_x - 40, nose_y - 40), (nose_x + 40, nose_y + 40), (0, 255, 0), 2)
 
+            # Dessiner un rectangle autour de la bouche
+            mouth_x, mouth_y = int(mouth.x * iw), int(mouth.y * ih)
+            cv2.rectangle(img, (mouth_x - 40, mouth_y - 40), (mouth_x + 40, mouth_y + 40), (0, 0, 255), 2)
 
-cv.waitKey(0)
+# Affichage de l'image avec les rectangles dessinés
+cv2.imshow('Face and Landmarks', img)
+cv2.waitKey(0)
+cv2.destroyAllWindows()
