@@ -3,10 +3,9 @@ import mediapipe as mp
 
 # Initialisation de Mediapipe pour la détection des visages
 mp_face_detection = mp.solutions.face_detection
-mp_drawing = mp.solutions.drawing_utils
 
 # Ouverture du fichier vidéo
-video_path = './vedios/8425706-uhd_3840_2160_25fps.mp4'
+video_path = './vedios/vedio 1.mp4'
 cap = cv.VideoCapture(video_path)
 
 # Initialisation de la détection de visages avec une confiance de détection minimale de 0.5
