@@ -1,49 +1,46 @@
 import cv2 as cv
+import mediapipe as mp
 
-# Charger le classificateur Haar pour la détection du visage
-haar_cascade = cv.CascadeClassifier(cv.data.haarcascades + 'haarcascade_frontalface_default.xml')
+# Initialisation de Mediapipe pour la détection des visages
+mp_face_detection = mp.solutions.face_detection
+mp_drawing = mp.solutions.drawing_utils
 
-# Charger le fichier vidéo
-video_path = './vedios/5725960-uhd_3840_2160_30fps.mp4' 
+# Ouverture du fichier vidéo
+video_path = './vedios/8425706-uhd_3840_2160_25fps.mp4'
 cap = cv.VideoCapture(video_path)
 
-frame_rate = 2 
-frame_count = 0
+# Initialisation de la détection de visages avec une confiance de détection minimale de 0.5
+with mp_face_detection.FaceDetection(min_detection_confidence=0.5) as face_detection:
+    while cap.isOpened():
+        ret, frame = cap.read()
+        if not ret:
+            break
 
-while True:
-    # Lire chaque image du fichier vidéo
-    check, frame = cap.read()
+        # Redimensionnement de l'image pour améliorer les performances
+        frame = cv.resize(frame, (640, 360))
 
-    # Si nous n'avons pas d'image (fin du fichier vidéo), arrêter la boucle
-    if not check:
-        print("Fin du vidéo.")
-        break
+        # Conversion de l'image BGR en RGB (format requis par Mediapipe)
+        frame_rgb = cv.cvtColor(frame, cv.COLOR_BGR2RGB)
 
-    frame_count += 1
+        # Traitement de l'image pour détecter les visages
+        results = face_detection.process(frame_rgb)
 
-    if frame_count % frame_rate != 0:
-        continue
+        # Si des visages sont détectés, on dessine un rectangle autour de chaque visage
+        if results.detections:
+            for detection in results.detections:
+                bboxC = detection.location_data.relative_bounding_box
+                h, w, _ = frame.shape
+                x, y, width, height = int(bboxC.xmin * w), int(bboxC.ymin * h), int(bboxC.width * w), int(bboxC.height * h)
+                # Dessiner un rectangle vert autour du visage détecté
+                cv.rectangle(frame, (x, y), (x + width, y + height), (0, 255, 0), 2)
 
-    gray = cv.cvtColor(frame, cv.COLOR_BGR2GRAY)
+        # Affichage de l'image avec la détection des visages
+        cv.imshow('Mediapipe Face Detection', frame)
 
-    # Détecter les visages dans l'image
-    faces = haar_cascade.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=5, minSize=(30, 30))
+        # Appuyer sur 'q' pour quitter la boucle
+        if cv.waitKey(30) & 0xFF == ord('q'):
+            break
 
-    # Dessiner un rectangle vert autour de chaque visage détecté
-    for (x, y, w, h) in faces:
-        cv.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)  # Couleur verte et épaisseur de 2 pixels
-
-    # Redimensionner l'image pour ajuster l'affichage
-    frame_resized = cv.resize(frame, (640, 360))  # تصغير الفيديو إلى حجم 640x360
-
-    # Afficher l'image avec les rectangles dessinés
-    cv.imshow('Détection des visages', frame_resized)
-
-    # Détection de la touche 'q' pour quitter
-    key = cv.waitKey(1) 
-    if key == ord('q'):
-        break
-
-# Libérer la vidéo et fermer les fenêtres
+# Libération de la vidéo et fermeture des fenêtres
 cap.release()
 cv.destroyAllWindows()

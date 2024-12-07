@@ -4,10 +4,11 @@ import mediapipe as mp
 # Initialisation de Mediapipe pour la détection du visage et l'extraction des points du visage
 mp_face_detection = mp.solutions.face_detection
 mp_face_mesh = mp.solutions.face_mesh
-mp_drawing = mp.solutions.drawing_utils
+
 
 # Chargement de l'image
 img = cv2.imread('data/Tester c/messi 4.jpg')
+
 
 # Conversion de l'image en RGB, car Mediapipe nécessite ce format
 rgb_img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)

@@ -64,7 +64,7 @@ def recognize_face(img):
     return img
 
 # Charger l'image de test
-img = cv.imread('data/Tester c/messi_test.jpg')
+img = cv.imread('data/Tester c/messi 4.jpg')
 if img is not None:
     result_img = recognize_face(img)
     cv.imshow("Reconnaissance Faciale", result_img)

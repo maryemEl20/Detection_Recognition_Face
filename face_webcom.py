@@ -1,51 +1,44 @@
-import cv2
+import cv2 as cv
 import mediapipe as mp
 
-# Initialisation des modules Mediapipe pour la détection des visages
+# Initialisation de Mediapipe
 mp_face_detection = mp.solutions.face_detection
+mp_drawing = mp.solutions.drawing_utils
 
-# Ouverture de la webcam (le 0 indique généralement la webcam par défaut)
-cam = cv2.VideoCapture(0)
+# Ouvrir la webcam
+cap = cv.VideoCapture(0)  # '0' correspond à la webcam par défaut
 
-# Vérification de la connexion de la caméra
-if not cam.isOpened():
-    print("Erreur: Impossible d'accéder à la caméra.")
-    exit()
-
-# Création de l'objet FaceDetection avec un seuil de confiance minimal
+# Configuration de Mediapipe pour la détection des visages
 with mp_face_detection.FaceDetection(min_detection_confidence=0.5) as face_detection:
-    while True:
-        # Lecture d'une image depuis la caméra
-        check, image = cam.read()
-        if not check:
-            print("Erreur: Impossible de lire l'image.")
+    while cap.isOpened():
+        ret, frame = cap.read()
+        if not ret:
+            print("Impossible d'accéder à la webcam.")
             break
 
-        # Conversion de l'image en format RGB (nécessaire pour Mediapipe)
-        rgb_image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        # Convertir l'image en RGB pour Mediapipe
+        frame_rgb = cv.cvtColor(frame, cv.COLOR_BGR2RGB)
 
-        # Détection des visages dans l'image
-        results = face_detection.process(rgb_image)
+        # Effectuer la détection des visages
+        results = face_detection.process(frame_rgb)
 
-        # Vérification si des visages ont été détectés
+        # Si des visages sont détectés, dessiner des rectangles autour
         if results.detections:
             for detection in results.detections:
-                # Récupérer les coordonnées du rectangle autour du visage
                 bboxC = detection.location_data.relative_bounding_box
-                ih, iw, _ = image.shape
-                x, y, w, h = int(bboxC.xmin * iw), int(bboxC.ymin * ih), int(bboxC.width * iw), int(bboxC.height * ih)
+                h, w, _ = frame.shape
+                x, y, width, height = int(bboxC.xmin * w), int(bboxC.ymin * h), int(bboxC.width * w), int(bboxC.height * h)
 
                 # Dessiner un rectangle vert autour du visage
-                cv2.rectangle(image, (x, y), (x + w, y + h), (0, 255, 0), 2)  # Rectangle vert
+                cv.rectangle(frame, (x, y), (x + width, y + height), (0, 255, 0), 2)
 
-        # Affichage de l'image avec les visages détectés
-        cv2.imshow('La webcam', image)
+        # Afficher la vidéo avec les rectangles
+        cv.imshow('Détection des visages', frame)
 
-        # Détection de la touche 'q' pour quitter
-        key = cv2.waitKey(1) 
-        if key == ord('q'):
+        # Appuyez sur la touche 'q' pour quitter
+        if cv.waitKey(1) & 0xFF == ord('q'):
             break
 
-# Libération des ressources de la caméra et fermeture des fenêtres
-cam.release()
-cv2.destroyAllWindows()
+# Libérer la webcam et fermer les fenêtres
+cap.release()
+cv.destroyAllWindows()
