@@ -2,7 +2,8 @@ import cv2 as cv
 import numpy as np
 import os
 
-# Charger le classificateur Haar
+#Haar Cascade est un algorithme utilisé dans OpenCV pour détecter des objets 
+# (tels que des visages) basés sur les fonctionnalités Haar.
 haar_cascade = cv.CascadeClassifier('./data/Haarcascades/haar_face.xml')
 
 # Liste des personnes à reconnaître
@@ -18,6 +19,7 @@ for person in people:
         img = cv.imread(os.path.join(folder, image_name))
         if img is None:
             continue
+        #"Chaque image est convertie en niveaux de gris
         gray = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
         
         # Détection des visages avec Haar Cascade
@@ -27,7 +29,7 @@ for person in people:
             faces.append(gray[y:y+h, x:x+w])
             labels.append(people.index(person))
 
-# Entraîner le modèle LBPH
+# Entraîner le modèle LBPH : Local Binary Patterns Histograms 
 recognizer = cv.face.LBPHFaceRecognizer_create()
 recognizer.train(faces, np.array(labels))
 
@@ -37,6 +39,8 @@ recognizer.save('./face_recognizer.yml')
 # Charger le modèle préexistant (si disponible)
 if os.path.exists('./face_recognizer.yml'):
     recognizer.read('./face_recognizer.yml')
+
+    ###
 
 # Fonction de reconnaissance faciale sur une image de test
 def recognize_face(img):
@@ -50,7 +54,7 @@ def recognize_face(img):
         label, confidence = recognizer.predict(face)
         
         # Calculer un seuil de confiance pour reconnaître ou non le visage
-        if confidence < 100:  # Seulement si la confiance est faible (valeur ajustable)
+        if confidence < 40:  # Seulement si la confiance est faible (valeur ajustable)
             name = people[label]
             color = (0, 255, 0)  # Vert pour une reconnaissance réussie
         else:
@@ -64,7 +68,7 @@ def recognize_face(img):
     return img
 
 # Charger l'image de test
-img = cv.imread('data/Tester c/messi 4.jpg')
+img = cv.imread('data/Tester c/x.jpg')
 if img is not None:
     result_img = recognize_face(img)
     cv.imshow("Reconnaissance Faciale", result_img)

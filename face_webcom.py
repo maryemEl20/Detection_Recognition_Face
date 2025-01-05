@@ -3,7 +3,6 @@ import mediapipe as mp
 
 # Initialisation de Mediapipe
 mp_face_detection = mp.solutions.face_detection
-mp_drawing = mp.solutions.drawing_utils
 
 # Ouvrir la webcam
 cap = cv.VideoCapture(0)  # '0' correspond à la webcam par défaut
